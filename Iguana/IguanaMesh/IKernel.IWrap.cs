@@ -26,73 +26,10 @@ namespace Iguana.IguanaMesh
 {
     public static partial class IKernel
     {
-        private const string gmsh_dll = "gmsh-4.8.dll";
-
-        private static string tempFolder = "";
-
-        /// <summary>
-        /// Extract DLLs from resources to temporary folder
-        /// </summary>
-        /// <param name="dllName">name of DLL file to create (including dll suffix)</param>
-        /// <param name="resourceBytes">The resource name (fully qualified)</param>
-        internal static void ExtractEmbeddedDlls(string dllName, byte[] resourceBytes)
-        {
-            Assembly assem = Assembly.GetExecutingAssembly();
-            //string[] names = assem.GetManifestResourceNames();
-            AssemblyName an = assem.GetName();
-
-            // The temporary folder holds one or more of the temporary DLLs
-            // It is made "unique" to avoid different versions of the DLL or architectures.
-            tempFolder = String.Format("{0}.{1}.{2}", an.Name, an.ProcessorArchitecture, an.Version);
-
-            string dirName = Path.Combine(Path.GetTempPath(), tempFolder);
-            if (!Directory.Exists(dirName))
-            {
-                Directory.CreateDirectory(dirName);
-            }
-
-            // Add the temporary dirName to the PATH environment variable (at the head!)
-            string path = Environment.GetEnvironmentVariable("PATH");
-            string[] pathPieces = path.Split(';');
-            bool found = false;
-            foreach (string pathPiece in pathPieces)
-            {
-                if (pathPiece == dirName)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                Environment.SetEnvironmentVariable("PATH", dirName + ";" + path);
-            }
-
-            // See if the file exists, avoid rewriting it if not necessary
-            string dllPath = Path.Combine(dirName, dllName);
-            bool rewrite = true;
-            if (File.Exists(dllPath))
-            {
-                byte[] existing = File.ReadAllBytes(dllPath);
-                if (resourceBytes.SequenceEqual(existing))
-                {
-                    rewrite = false;
-                }
-            }
-            if (rewrite)
-            {
-                File.WriteAllBytes(dllPath, resourceBytes);
-            }
-        }
+        private const string gmsh_dll = "libgmsh.4.8.4.dylib";
 
         internal static class IWrap
         {
-
-            static IWrap()
-            {
-                ExtractEmbeddedDlls(gmsh_dll, Properties.Resources.gmsh_4_6);
-            }
-
             /////////////////////////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////
             ////// SETUP
