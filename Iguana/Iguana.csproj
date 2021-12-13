@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Iguana</RootNamespace>
     <AssemblyName>Iguana</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
@@ -144,6 +144,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="libgmsh.4.8.4.dylib">
+    </None>
+    <None Include="libgmsh.4.7.1.dylib" />
+    <None Include="libgmsh.4.6.0.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

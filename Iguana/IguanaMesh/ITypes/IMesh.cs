@@ -30,7 +30,7 @@ namespace Iguana.IguanaMesh.ITypes
         private int elementKey = 1;
         private ITopology _topology;
         private bool _valid = false;
-        private int _maxDimension = 3;
+        private readonly int _maxDimension = 3;
 
         private Mesh _renderMesh;
         private HashSet<int> _elementTypes;

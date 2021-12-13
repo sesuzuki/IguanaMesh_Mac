@@ -241,7 +241,6 @@ namespace Iguana.IguanaMesh
                 return crvTags;
             }
 
-
             public static int[] CreateUnderlyingLinesFromCurveDividedByCount(Curve crv, double size, int nodeNumber, bool synchronize = false)
             {
                 if (!crv.IsLinear())

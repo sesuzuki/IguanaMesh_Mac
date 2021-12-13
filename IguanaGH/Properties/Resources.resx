@@ -130,6 +130,9 @@
   <data name="iAnisoField" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\iAnisoField.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+    <data name="iBar" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\iBar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="iBoundaryField" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\iBoundaryField.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

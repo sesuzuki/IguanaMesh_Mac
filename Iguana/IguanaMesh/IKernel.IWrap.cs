@@ -26,7 +26,7 @@ namespace Iguana.IguanaMesh
 {
     public static partial class IKernel
     {
-        private const string gmsh_dll = "libgmsh.4.8.4.dylib";
+        private const string gmsh_dll = "libgmsh.4.6.0.dylib";
 
         internal static class IWrap
         {

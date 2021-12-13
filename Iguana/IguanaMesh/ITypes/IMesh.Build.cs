@@ -37,6 +37,7 @@ namespace Iguana.IguanaMesh.ITypes
             }
 
             //BuildSiblingHalfFacets
+            _elementTypes.Clear();
             Boolean flag1 = BuildAllElementsSiblingHalfFacets();
             Boolean flag2 = BuildAllVertexToHalfFacet();
             _renderMesh = new Mesh();
@@ -99,6 +100,7 @@ namespace Iguana.IguanaMesh.ITypes
             IElement e = _elements[dim][elementID];
             IElement nE;
             HashSet<long> vertexSiblings;
+            _elementTypes.Add(e.ElementType);
 
             //Half-Facets from element e (Faces to edges)
             for (Int32 halfFacetID = 1; halfFacetID <= e.HalfFacetsCount; halfFacetID++)

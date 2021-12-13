@@ -10,13 +10,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IguanaMeshGH</RootNamespace>
     <AssemblyName>IguanaMeshGH</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <RhinoMacLauncher>/Applications/Rhino 7.App</RhinoMacLauncher>
     <RhinoPluginType>gha</RhinoPluginType>
-    <RhinoMacLauncher>app</RhinoMacLauncher>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -206,6 +206,7 @@
   <ItemGroup>
     <None Include="Resources\AHF_PlaneMesh.png" />
     <None Include="packages.config" />
+    <None Include="Resources\iBar.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AHF_IVoxel.png" />
@@ -638,10 +639,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup>
-    <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
-Erase "$(TargetPath)"</PostBuildEvent>
-  </PropertyGroup>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
   </PropertyGroup>
