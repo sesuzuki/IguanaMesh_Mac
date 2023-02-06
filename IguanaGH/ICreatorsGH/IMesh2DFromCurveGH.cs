@@ -74,11 +74,13 @@ namespace IguanaMeshGH.ICreators
             List<ITransfinite> transfinites = new List<ITransfinite>();
             IField field = null;
 
-            DA.GetData(0, ref crv);
+            if(!DA.GetData(0, ref crv)) return;
             DA.GetData(1, ref field);
             DA.GetDataList(2, constraints);
             DA.GetDataList(3, transfinites);
             DA.GetData(4, ref solver);
+
+            if (crv == null) return;
 
             if (crv.IsClosed)
             {

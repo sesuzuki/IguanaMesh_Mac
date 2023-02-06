@@ -78,20 +78,20 @@ namespace IguanaMeshGH.ICreators
             IField field = null;
 
             //Retrieve vertices and elements
-            DA.GetData(0, ref _outer);
+            if(!DA.GetData(0, ref _outer)) return;
             DA.GetDataList(1, _inner);
             DA.GetData(2, ref field);
             DA.GetDataList(3, constraints);
             DA.GetDataList(4, transfinites);
             DA.GetData(5, ref solver);
 
-            if (!_outer.IsPolyline())
+            if (_outer==null || !_outer.IsPolyline())
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "The outer boundary should be planar closed polyline.");
                 return;
             }
 
-            if (_inner.Count > 0 && !_inner.TrueForAll(crv => crv.IsPolyline()))
+            if (_inner.Contains(null) || _inner.Count > 0 && !_inner.TrueForAll(crv => crv.IsPolyline()))
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Inner boundaries should be planar closed polylines.");
                 return;

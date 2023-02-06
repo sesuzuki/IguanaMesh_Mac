@@ -76,12 +76,14 @@ namespace IguanaMeshGH.ICreators
             ISolver2D solver = new ISolver2D();
             List<ITransfinite> transfinite = new List<ITransfinite>();
 
-            DA.GetData(0, ref crv);
+            if(!DA.GetData(0, ref crv)) return;
             DA.GetData(1, ref dir);
             DA.GetData(2, ref length);
             DA.GetData(3, ref field);
             DA.GetDataList(4, transfinite);
             DA.GetData(5, ref solver);
+
+            if (crv == null) return;
 
             string logInfo;
             GH_Structure<IEntityInfo> entities;

@@ -15,7 +15,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <RhinoMacLauncher>/Applications/Rhino 7.App</RhinoMacLauncher>
+    <RhinoMacLauncher>/Applications/Rhino 7.app</RhinoMacLauncher>
     <RhinoPluginType>gha</RhinoPluginType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">

@@ -595,6 +595,13 @@ namespace Iguana.IguanaMesh
             /// <returns> Iguana mesh </returns>
             public static IMesh CreateShellMeshFromBrep(Brep brep, ISolver2D solver, out string logInfo, out GH_Structure<IEntityInfo> entities, List<IConstraint> constraints = default, List<ITransfinite> transfinites = default, IField field = null)
             {
+                if (brep == null)
+                {
+                    logInfo = "Invalid input";
+                    entities = new GH_Structure<IEntityInfo>();
+                    return null;
+                }
+
                 logInfo = Initialize();
                 StartLogger();
 
@@ -635,6 +642,13 @@ namespace Iguana.IguanaMesh
             /// <returns> Iguana mesh </returns>
             public static IMesh CreateShellMeshFromCurveExtrusion(Curve crv, Vector3d direction, double magnitude, ISolver2D solver, out string logInfo, out GH_Structure<IEntityInfo> entities, List<IConstraint> constraints = default, List<ITransfinite> transfinites = default, IField field = null)
             {
+                if (crv == null)
+                {
+                    entities = new GH_Structure<IEntityInfo>();
+                    logInfo = "Invalid curve";
+                    return null;
+                }
+
                 logInfo = Initialize();
                 StartLogger();
 
@@ -705,6 +719,13 @@ namespace Iguana.IguanaMesh
             /// <returns> Iguana mesh </returns>
             public static IMesh CreateShellMeshFromClosedCurve(Curve crv, ISolver2D solver, out string logInfo, out GH_Structure<IEntityInfo> entities, List<IConstraint> constraints = default, List<ITransfinite> transfinites = default, IField field = null)
             {
+                if (crv==null)
+                {
+                    entities = new GH_Structure<IEntityInfo>();
+                    logInfo = "Invalid curve";
+                    return null;
+                }
+
                 logInfo = Initialize();
                 StartLogger();
 
@@ -871,6 +892,13 @@ namespace Iguana.IguanaMesh
             /// <returns> Iguana mesh </returns>
             public static IMesh CreateShellMeshFromPolylines(Curve outerboundary, List<Curve> holes, ISolver2D solver, out string logInfo, out GH_Structure<IEntityInfo> entities, List<IConstraint> constraints = default, List<ITransfinite> transfinites = default, IField field = null)
             {
+                if (outerboundary == null || holes.Contains(null))
+                {
+                    entities = new GH_Structure<IEntityInfo>();
+                    logInfo = "Invalid inputs";
+                    return null;
+                }
+
                 logInfo = Initialize();
                 StartLogger();
 

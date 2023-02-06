@@ -74,13 +74,13 @@ namespace IguanaMeshGH.ICreators
             List<IConstraint> constraints = new List<IConstraint>();
             List<ITransfinite> transfinites = new List<ITransfinite>();
 
-            DA.GetData(0, ref srf);
+            if(!DA.GetData(0, ref srf)) return;
             DA.GetData(1, ref field);
             DA.GetDataList(2, constraints);
             DA.GetDataList(3, transfinites);
             DA.GetData(4, ref solver);
 
-            if (srf.IsSolid || srf.Faces.Count>1)
+            if (srf==null || srf.IsSolid || srf.Faces.Count>1)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Input geometry should be a trimmed/untrimmed surface.");
                 return;
