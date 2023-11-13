@@ -30,6 +30,7 @@ using Grasshopper.Kernel.Data;
 using Rhino.FileIO;
 using Rhino.Display;
 using System.Drawing;
+using Grasshopper.Kernel.Types.Transforms;
 
 namespace Iguana.IguanaMesh
 {
@@ -2178,9 +2179,12 @@ namespace Iguana.IguanaMesh
                 /// `dim' and tag `tag'. Currently only entities of dimension 2 (to recombine
                 /// triangles into quadrangles) are supported.
                 /// </summary>
-                public static void SetRecombine(int dim, int tag)
+                /// <param name="dim"></param>
+                /// <param name="tag"></param>
+                /// <param name="angle"> angle' specifies the threshold angle for the simple recombination algorithm. </param>
+                public static void SetRecombine(int dim, int tag, double angle=0.01)
                 {
-                    IWrap.GmshModelMeshSetRecombine(dim, tag, ref _ierr);
+                    IWrap.GmshModelMeshSetRecombine(dim, tag, angle, ref _ierr);
                 }
 
                 /// <summary>
@@ -2205,6 +2209,19 @@ namespace Iguana.IguanaMesh
                 public static void SetReverse(int dim, int tag, bool val)
                 {
                     IWrap.GmshModelMeshSetReverse(dim, tag, Convert.ToInt32(val), ref _ierr);
+                }
+
+                /// <summary>
+                /// Set a reverse meshing constraint on the model entity of dimension `dim' and
+                /// tag `tag'. If `val' is true, the mesh orientation will be reversed with
+                /// respect to the natural mesh orientation(i.e.the orientation consistent with the orientation of the geometry). If `val' is false, the mesh is left as-is.
+                /// </summary>
+                /// <param name="dim"></param>
+                /// <param name="tag"></param>
+                /// <param name="val"></param>
+                public static void Reverse(int dim, int tag)
+                {
+                    IWrap.GmshModelMeshReverse(dim, tag, ref _ierr);
                 }
 
                 /// <summary>
@@ -2302,9 +2319,10 @@ namespace Iguana.IguanaMesh
                 /// <param name="boundary"></param>
                 /// <param name="forReparametrization"></param>
                 /// <param name="curveAngle"></param>
-                public static void ClassifySurfaces(double angle, bool boundary, bool forReparametrization, double curveAngle)
+                /// <param name="exportDiscrete">If `exportDiscrete' is set, clear any built-in CAD kernel entities and export the discrete entities in the built-in CAD kernel.</param>
+                public static void ClassifySurfaces(double angle, bool boundary, bool forReparametrization, double curveAngle, bool exportDiscrete=true)
                 {
-                    IWrap.GmshModelMeshClassifySurfaces(angle, Convert.ToInt32(boundary), Convert.ToInt32(forReparametrization), curveAngle, ref _ierr);
+                    IWrap.GmshModelMeshClassifySurfaces(angle, Convert.ToInt32(boundary), Convert.ToInt32(forReparametrization), curveAngle, exportDiscrete ? 1:0, ref _ierr);
                 }
 
                 /// <summary>
@@ -2351,25 +2369,25 @@ namespace Iguana.IguanaMesh
                 /// <param name="dims"></param>
                 public static void ComputeHomology(int[] domainTags, int[] subdomainTags, int[] dims)
                 {
-                    IWrap.GmshModelMeshComputeHomology(domainTags, domainTags.LongLength, subdomainTags, subdomainTags.LongLength, dims, dims.LongLength, ref _ierr);
-                }
+                    IWrap.GmshModelMeshAddHomologyRequest(domainTags, domainTags.LongLength, subdomainTags, subdomainTags.LongLength, dims, dims.LongLength, ref _ierr);
 
-                /// <summary>
-                /// Compute a basis representation for cohomology spaces after a mesh has been
-                /// generated.The computation domain is given in a list of physical group tags
-                /// `domainTags'; if empty, the whole mesh is the domain. The computation
-                /// subdomain for relative cohomology computation is given in a list of
-                /// physical group tags `subdomainTags'; if empty, absolute cohomology is
-                /// computed.The dimensions homology bases to be computed are given in the
-                /// list `dim'; if empty, all bases are computed. Resulting basis
-                /// representation cochains are stored as physical groups in the mesh.
-                /// </summary>
-                /// <param name="domainTags"></param>
-                /// <param name="subdomainTags"></param>
-                /// <param name="dims"></param>
-                public static void ComputeCohomology(int[] domainTags, int[] subdomainTags, [In, Out] int[] dims)
-                {
-                    IWrap.GmshModelMeshComputeCohomology(domainTags, domainTags.LongLength, subdomainTags, subdomainTags.LongLength, dims, dims.LongLength, ref _ierr);
+                    IntPtr dimTagsPtr;
+                    int dimTags_n;
+                    IWrap.GmshModelMeshComputeHomology(out dimTagsPtr, out dimTags_n, ref _ierr);
+
+                    Tuple<int, int>[] dimTags = null;
+
+                    // Tags
+                    if (dimTags_n > 0)
+                    {
+                        var temp = new int[dimTags_n];
+                        Marshal.Copy(dimTagsPtr, temp, 0, (int)dimTags_n);
+
+                        dimTags = IHelpers.GraftIntTupleArray(temp);
+                    }
+
+                    // Delete unmanaged allocated memory
+                    IWrap.GmshFree(dimTagsPtr);
                 }
 
                 /// <summary>
@@ -2699,15 +2717,15 @@ namespace Iguana.IguanaMesh
                 }
 
                 /// <summary>
-                /// Get the type and node tags of the element with tag `tag'. This function
+                /// Get the type and node tags of the element with tag `tag', as well as the dimension `dim' and tag `tag' of the entity on which the element is classified. This function
                 /// relies on an internal cache(a vector in case of dense element numbering, a
                 /// map otherwise); for large meshes accessing elements in bulk is often preferable.
                 /// </summary>
-                public static void GetElement(long elementTag, out int elementType, out long[] nodeTags)
+                public static void GetElement(long elementTag, int dim, int tag, out int elementType, out long[] nodeTags)
                 {
                     IntPtr ntP;
                     long nodeTags_n;
-                    IWrap.GmshModelMeshGetElement(elementTag, out elementType, out ntP, out nodeTags_n, ref _ierr);
+                    IWrap.GmshModelMeshGetElement(elementTag, out elementType, out ntP, out nodeTags_n, dim, tag, ref _ierr);
 
                     nodeTags = new long[nodeTags_n];
                     Marshal.Copy(ntP, nodeTags, 0, (int)nodeTags_n);
@@ -2903,27 +2921,6 @@ namespace Iguana.IguanaMesh
                     Free(jP);
                     Free(dP);
                     Free(cP);
-                }
-
-                /// <summary>
-                /// Get information about the `keys'. `infoKeys' returns information about the
-                /// functions associated with the `keys'. `infoKeys[0].first' describes the
-                /// type of function(0 for  vertex function, 1 for edge function, 2 for face
-                /// function and 3 for bubble function). `infoKeys[0].second' gives the order
-                /// of the function associated with the key.Warning: this is an experimental
-                /// feature and will probably change in a future release.
-                /// </summary>
-                public static void GetInformationForElements(int[] keys, int elementType, string functionSpaceType, out Tuple<int, int>[] infoKeys)
-                {
-                    IntPtr ikP;
-                    long infoKeys_n;
-                    IWrap.GmshModelMeshGetInformationForElements(keys, keys.LongLength, elementType, functionSpaceType, out ikP, out infoKeys_n, ref _ierr);
-
-                    var temp = new int[infoKeys_n];
-                    Marshal.Copy(ikP, temp, 0, (int)infoKeys_n);
-                    infoKeys = IHelpers.GraftIntTupleArray(temp);
-
-                    Free(ikP);
                 }
 
                 /// <summary>

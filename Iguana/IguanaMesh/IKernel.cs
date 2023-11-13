@@ -39,10 +39,10 @@ namespace Iguana.IguanaMesh
                 string msg = "\n---------------------------------------------\n\n" +
                              "                 IguanaMesh\n\n" +
                              "---------------------------------------------\n" +
-                             "Version       : 1.0\n" +
+                             "Version       : 2.0\n" +
                              "License       : GNU General Public License\n" +
-                             "Gmsh version  : 4.6.0\n" +
-                             "OCC version   : 7.4.0\n" +
+                             "Gmsh version  : 4.11.1\n" +
+                             "Architecture  : ARM64\n" + 
                              "---------------------------------------------\n\n\n";
                 return msg;
             }
@@ -54,7 +54,7 @@ namespace Iguana.IguanaMesh
         public static string Initialize()
         {
             IntPtr argv = IntPtr.Zero;
-            IWrap.GmshInitialize(0, ref argv, Convert.ToInt32(true), ref _ierr);
+            IWrap.GmshInitialize(0, ref argv, Convert.ToInt32(true), Convert.ToInt32(false), ref _ierr);
             Marshal.FreeCoTaskMem(argv);
             return LogInfo;
         }

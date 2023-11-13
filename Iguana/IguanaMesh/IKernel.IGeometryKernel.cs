@@ -514,7 +514,7 @@ namespace Iguana.IguanaMesh
                 /// <returns></returns>
                 public static int AddCurveLoop(int[] curveTags, int tag = -1)
                 {
-                    int tag_crv = IWrap.GmshModelGeoAddCurveLoop(curveTags, curveTags.Length, tag, ref _ierr);
+                    int tag_crv = IWrap.GmshModelGeoAddCurveLoop(curveTags, curveTags.Length, tag, 0, ref _ierr);
                     return tag_crv;
                 }
 
@@ -812,6 +812,16 @@ namespace Iguana.IguanaMesh
                 public static void SetReverse(int dim, int tag, bool val)
                 {
                     IWrap.GmshModelGeoMeshSetReverse(dim, tag, Convert.ToInt32(val), ref _ierr);
+                }
+
+                /// <summary>
+                /// Set a reverse meshing constraint on the model entity of dimension `dim' and tag `tag'.  
+                /// </summary>
+                /// <param name="dim"></param>
+                /// <param name="tag"></param>
+                public static void Reverse(int dim, int tag, bool val)
+                {
+                    IWrap.GmshModelGeoMeshSetReverse(dim, tag, val?1:0, ref _ierr);
                 }
 
                 /// <summary>

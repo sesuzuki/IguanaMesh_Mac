@@ -487,10 +487,16 @@ namespace Iguana.IguanaMesh
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically. </param>
                 /// <param name="angle1"></param>
                 /// <param name="angle2"></param>
+                /// <param name="plane"></param>
                 /// <returns></returns>
-                public static int AddCircle(double x, double y, double z, double r, int tag = -1, double angle1 = 0, double angle2 = 2 * Math.PI)
+                public static int AddCircle(double x, double y, double z, double r, int tag = -1, double angle1 = 0, double angle2 = 2 * Math.PI, Plane plane = default)
                 {
-                    return IWrap.gmshModelOccAddCircle(x, y, z, r, tag, angle1, angle2, ref _ierr);
+                    if (plane == default) plane = Plane.WorldXY;
+                    double[] zAxis = new double[] { plane.ZAxis.X, plane.ZAxis.Y, plane.ZAxis.Z};
+                    double[] xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+
+
+                    return IWrap.gmshModelOccAddCircle(x, y, z, r, tag, angle1, angle2, zAxis, 3, xAxis, 3, ref _ierr);
                 }
 
                 /// <summary>
@@ -524,25 +530,33 @@ namespace Iguana.IguanaMesh
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically.  </param>
                 /// <param name="angle1"></param>
                 /// <param name="angle2"></param>
-                /// 
+                /// <param name="plane"></param>
                 /// <returns></returns>
-                public static int AddEllipse(double x, double y, double z, double r1, double r2, int tag = -1, double angle1 = 0, double angle2 = 2 * Math.PI)
+                public static int AddEllipse(double x, double y, double z, double r1, double r2, int tag = -1, double angle1 = 0, double angle2 = 2 * Math.PI, Plane plane = default)
                 {
-                    return IWrap.GmshModelOccAddEllipse(x, y, z, r1, r2, tag, angle1, angle2, ref _ierr);
+                    if (plane == default) plane = Plane.WorldXY;
+                    double[] zAxis = new double[] { plane.ZAxis.X, plane.ZAxis.Y, plane.ZAxis.Z };
+                    double[] xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+
+                    return IWrap.GmshModelOccAddEllipse(x, y, z, r1, r2, tag, angle1, angle2, zAxis, 3, xAxis, 3, ref _ierr);
                 }
 
                 /// <summary>
                 /// Add a spline (C2 b-spline) curve going through the points `pointTags'.
                 /// Create a periodic curve if the first and last points are the same.
+                /// If the `tangents' vector contains 6 entries, use them as concatenated x, y, z components of the initial and final tangents of the b-spline;
+                /// if it contains 3 times as many entries as the number of points, use them as concatenated x, y, z components of the tangents at each point, unless the norm of the tangent is zero.
                 /// Return the tag of the spline curve.
                 /// </summary>
                 /// <param name="pointTags"></param>
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically. </param>
                 /// <returns></returns>
 
-                public static int AddSpline(int[] pointTags, int tag = -1)
+                public static int AddSpline(int[] pointTags, int tag = -1, double[] tangents = default)
                 {
-                    return IWrap.gmshModelOccAddSpline(pointTags, pointTags.LongLength, tag, ref _ierr);
+                    if (tangents == default) tangents = new double[0];
+
+                    return IWrap.gmshModelOccAddSpline(pointTags, pointTags.LongLength, tag, tangents, tangents.Length, ref _ierr);
                 }
 
                 /// <summary>
@@ -633,10 +647,15 @@ namespace Iguana.IguanaMesh
                 /// <param name="rx"></param>
                 /// <param name="ry"></param>
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically.  </param>
+                /// <param name="plane"></param>
                 /// <returns></returns>
-                public static int AddDisk(double xc, double yc, double zc, double rx, double ry, int tag = -1)
+                public static int AddDisk(double xc, double yc, double zc, double rx, double ry, int tag = -1, Plane plane=default)
                 {
-                    return IWrap.GmshModelOccAddDisk(xc, yc, zc, rx, ry, tag, ref _ierr);
+                    if (plane == default) plane = Plane.WorldXY;
+                    double[] zAxis = new double[] { plane.ZAxis.X, plane.ZAxis.Y, plane.ZAxis.Z };
+                    double[] xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+
+                    return IWrap.GmshModelOccAddDisk(xc, yc, zc, rx, ry, tag, zAxis, 3, xAxis, 3, ref _ierr);
                 }
 
 
@@ -659,11 +678,21 @@ namespace Iguana.IguanaMesh
                 /// <param name="wireTag"></param>
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically.  </param>
                 /// <param name="pointTags"> If `pointTags' are provided, force the surface to pass through the given points. </param>
+                /// <param name="degree"> the degree of the energy criterion to minimize for computing the deformation of the surface).  </param>
+                /// <param name="numPointsOnCurve"> the degree of the energy criterion to minimize for computing the deformation of the surface.  </param>
+                /// <param name="numIter"> the maximum number of iterations of the optimization process.  </param>
+                /// <param name="anisotropic"> improve performance when the ratio of the length along the two parametric coordinates of the surface is high.  </param>
+                /// <param name="tol2d"> tolerance to the constraints in the parametric plane of the surface.  </param>
+                /// <param name="tol3d"> the maximum distance allowed between the support surface and the constraints </param>
+                /// <param name="tolAng"> the maximum angle allowed between the normal of the surface and the constraints</param>
+                /// <param name="tolCurv"> the maximum difference of curvature allowed between the surface and the constraint</param>
+                /// <param name="maxDegree"> the highest degree which the polynomial defining the filling surface can have </param>
+                /// <param name="maxSegments"> the largest number of segments which the filling surface can have </param>
                 /// <returns></returns>
-                public static int AddSurfaceFilling(int wireTag, int[] pointTags = default, int tag = -1)
+                public static int AddSurfaceFilling(int wireTag, int[] pointTags = default, int degree = 3, int numPointsOnCurve=2, int numIter=5, bool anisotropic = true, double tol2d=0.1, double tol3d = 0.1, double tolAng=0.01, double tolCurv=0.01, int maxDegree=3, int maxSegments= (int) 1e9, int tag = -1)
                 {
                     if (pointTags == default) pointTags = new int[0];
-                    return IWrap.GmshModelOccAddSurfaceFilling(wireTag, tag, pointTags, pointTags.LongLength, ref _ierr);
+                    return IWrap.GmshModelOccAddSurfaceFilling(wireTag, tag, pointTags, pointTags.LongLength, degree, numPointsOnCurve, numIter, anisotropic ? 1 : 0, tol2d, tol3d, tolAng, tolCurv, maxDegree, maxSegments, ref _ierr);
                 }
 
                 /// <summary>
@@ -709,15 +738,20 @@ namespace Iguana.IguanaMesh
                 /// <param name="knotsV"></param>
                 /// <param name="multiplicitiesU"></param>
                 /// <param name="multiplicitiesV"></param>
+                /// <param name="wireTags"></param> If `wireTags' is provided, trim the b-spline patch using the provided wires: the first wire defines the external contour, the others define holes.
+                /// <param name="wire3D"></param> If `wire3D' is set, consider wire curves as 3D curves and project them on the b-spline surface; otherwise consider the wire curves as defined in the parametric space of the surface
+                /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically. </param>
                 /// <returns></returns>
-                public static int AddBSplineSurface(int[] pointTags, int numPointsU, int degreeU, int degreeV, double[] weights = default, double[] knotsU = default, double[] knotsV = default, int[] multiplicitiesU = default, int[] multiplicitiesV = default, int tag = -1)
+                public static int AddBSplineSurface(int[] pointTags, int numPointsU, int degreeU, int degreeV, double[] weights = default, double[] knotsU = default, double[] knotsV = default, int[] multiplicitiesU = default, int[] multiplicitiesV = default, int[] wireTags=default, bool wire3D=false, int tag = -1)
                 {
                     if (weights == default) weights = new double[0];
                     if (knotsU == default) knotsU = new double[0];
                     if (knotsV == default) knotsV = new double[0];
                     if (multiplicitiesU == default) multiplicitiesU = new int[0];
                     if (multiplicitiesV == default) multiplicitiesV = new int[0];
-                    return IWrap.GmshModelOccAddBSplineSurface(pointTags, pointTags.LongLength, numPointsU, tag, degreeU, degreeV, weights, weights.LongLength, knotsU, knotsU.LongLength, knotsV, knotsV.LongLength, multiplicitiesU, multiplicitiesU.LongLength, multiplicitiesV, multiplicitiesV.LongLength, ref _ierr);
+                    if (wireTags == default) wireTags = new int[0];
+
+                    return IWrap.GmshModelOccAddBSplineSurface(pointTags, pointTags.LongLength, numPointsU, tag, degreeU, degreeV, weights, weights.LongLength, knotsU, knotsU.LongLength, knotsV, knotsV.LongLength, multiplicitiesU, multiplicitiesU.LongLength, multiplicitiesV, multiplicitiesV.LongLength, wireTags, wireTags.Length, wire3D ? 1 :0, ref _ierr);
                 }
 
                 /// <summary>
@@ -726,11 +760,15 @@ namespace Iguana.IguanaMesh
                 /// </summary>
                 /// <param name="pointTags"> `pointTags' control points given as a single vector [Pu1v1, ... Pu`numPointsU'v1, Pu1v2, ...].  </param>
                 /// <param name="numPointsU"></param>
+                /// <param name="wireTags"></param> If `wireTags' is provided, trim the b-spline patch using the provided wires: the first wire defines the external contour, the others define holes.
+                /// <param name="wire3D"></param> If `wire3D' is set, consider wire curves as 3D curves and project them on the b-spline surface; otherwise consider the wire curves as defined in the parametric space of the surface
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically. </param>
                 /// <returns></returns>
-                public static int AddBezierSurface(int[] pointTags, int numPointsU, int tag = -1)
+                public static int AddBezierSurface(int[] pointTags, int numPointsU, int[] wireTags = default, bool wire3D = false, int tag = -1)
                 {
-                    return IWrap.GmshModelOccAddBezierSurface(pointTags, pointTags.LongLength, numPointsU, tag, ref _ierr);
+                    if (wireTags == default) wireTags = new int[0];
+
+                    return IWrap.GmshModelOccAddBezierSurface(pointTags, pointTags.LongLength, numPointsU, tag, wireTags, wireTags.Length, wire3D ? 1 : 0, ref _ierr);
                 }
 
                 /// <summary>
@@ -851,10 +889,13 @@ namespace Iguana.IguanaMesh
                 /// <param name="dz"></param>
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically. </param>
                 /// <param name="ltx"> The optional argument `ltx' defines the top extent along the x-axis. </param>
+                /// <param name="zAxis"> If a vector `zAxis' of size 3 is provided, use it to define the z-axis. </param>
                 /// <returns></returns>
-                public static int AddWedge(double x, double y, double z, double dx, double dy, double dz, double ltx = -1, int tag = -1)
+                public static int AddWedge(double x, double y, double z, double dx, double dy, double dz, double ltx = -1, Vector3d zAxis=default, int tag = -1)
                 {
-                    return IWrap.GmshModelOccAddWedge(x, y, z, dx, dy, dz, tag, ltx, ref _ierr);
+                    if (zAxis == default) zAxis = Vector3d.ZAxis;
+
+                    return IWrap.GmshModelOccAddWedge(x, y, z, dx, dy, dz, tag, ltx, new double[] { zAxis.X, zAxis.Y, zAxis.Z }, 3, ref _ierr);
                 }
 
                 /// <summary>
@@ -868,10 +909,13 @@ namespace Iguana.IguanaMesh
                 /// <param name="r2"></param>
                 /// <param name="tag"> If `tag' is positive, set the tag explicitly; otherwise a new tag is selected automatically.</param>
                 /// <param name="angle"> The optional argument `angle' defines the angular opening(from 0 to 2*Pi)</param>
+                /// <param name="zAxis"> If a vector `zAxis' of size 3 is provided, use it to define the z-axis. </param>
                 /// <returns></returns>
-                public static int AddTorus(double x, double y, double z, double r1, double r2, double angle = Math.PI, int tag = -1)
+                public static int AddTorus(double x, double y, double z, double r1, double r2, double angle = Math.PI, Vector3d zAxis = default, int tag = -1)
                 {
-                    return IWrap.GmshModelOccAddTorus(x, y, z, r1, r2, tag, angle, ref _ierr);
+                    if (zAxis == default) zAxis = Vector3d.ZAxis;
+
+                    return IWrap.GmshModelOccAddTorus(x, y, z, r1, r2, tag, angle, new double[] { zAxis.X, zAxis.Y, zAxis.Z }, 3, ref _ierr);
                 }
 
                 /// <summary>
@@ -883,12 +927,60 @@ namespace Iguana.IguanaMesh
                 /// <param name="makeSolid"></param>
                 /// <param name="makeRuled"> If the optional argument `makeRuled' is set, the surfaces created on the boundary are forced to be ruled surfaces.</param>
                 /// <param name="maxDegree"> If `maxDegree' is positive, set the maximal degree of resulting surface.</param>
+                /// <param name="continuity"> The optional argument `continuity' allows to specify the continuity of the resulting shape (0: "C0", 1: "G1", 2: "C1", 3: "G2", 4: "C2", 5: "C3", 6: "CN").</param>
+                /// <param name="parametrization"> The optional argument `parametrization' sets the parametrization type (0: "ChordLength", 1: "Centripetal", 2:"IsoParametric").</param>
+                /// <param name="smoothing"> The optional argument `smoothing' determines if smoothing is applied.</param>
                 /// <returns></returns>
-                public static void AddThruSections(int[] wireTags, out Tuple<int, int>[] dimTags, int tag, bool makeSolid = true, bool makeRuled = false, int maxDegree = -1)
+                public static void AddThruSections(int[] wireTags, out Tuple<int, int>[] dimTags, int tag, bool makeSolid = true, bool makeRuled = false, int maxDegree = -1, int continuity=0, int parametrization=0, bool smoothing=true)
                 {
+                    string continuityStr, parametrizationStr;
+                    switch (continuity)
+                    {
+                        case 0:
+                            continuityStr = "C0";
+                            break;
+                        case 1:
+                            continuityStr = "G1";
+                            break;
+                        case 2:
+                            continuityStr = "C1";
+                            break;
+                        case 3:
+                            continuityStr = "G2";
+                            break;
+                        case 4:
+                            continuityStr = "C2";
+                            break;
+                        case 5:
+                            continuityStr = "C3";
+                            break;
+                        case 6:
+                            continuityStr = "CN";
+                            break;
+                        default:
+                            continuityStr = "C0";
+                            break;
+                    }
+
+                    switch (parametrization)
+                    {
+                        case 0:
+                            parametrizationStr = "ChordLength";
+                            break;
+                        case 1:
+                            parametrizationStr = "Centripetal";
+                            break;
+                        case 2:
+                            parametrizationStr = "IsoParametric";
+                            break;
+                        default:
+                            parametrizationStr = "ChordLength";
+                            break;
+                    }
+
                     IntPtr dtP;
                     long outDimTags_n;
-                    IWrap.GmshModelOccAddThruSections(wireTags, wireTags.LongLength, out dtP, out outDimTags_n, tag, Convert.ToInt32(makeSolid), Convert.ToInt32(makeRuled), maxDegree, ref _ierr);
+                    IWrap.GmshModelOccAddThruSections(wireTags, wireTags.LongLength, out dtP, out outDimTags_n, tag, Convert.ToInt32(makeSolid), Convert.ToInt32(makeRuled), maxDegree, continuityStr, parametrizationStr, smoothing ?1:0, ref _ierr);
 
                     dimTags = new Tuple<int, int>[0];
                     if (outDimTags_n > 0)
@@ -1013,12 +1105,51 @@ namespace Iguana.IguanaMesh
                 /// <param name="dimTags"></param>
                 /// <param name="wireTag"></param>
                 /// <param name="outDimTags"></param>
-                public static void AddPipe(Tuple<int, int>[] dimTags, int wireTag, out Tuple<int, int>[] outDimTags)
+                /// <param name="trihedron"> The type of sweep (0: "DiscreteTrihedron", 1: "CorrectedFrenet", 2: "Fixed", 3: "Frenet", 4: "ConstantNormal", 5: "Darboux", 6: "GuideAC", 7: "GuidePlan", 8: "GuideACWithContact", 9: "GuidePlanWithContact") </param>
+                public static void AddPipe(Tuple<int, int>[] dimTags, int wireTag, out Tuple<int, int>[] outDimTags, int trihedron = 0)
                 {
+                    string trihedronStr;
+                    switch (trihedron)
+                    {
+                        case 0:
+                            trihedronStr = "DiscreteTrihedron";
+                            break;
+                        case 1:
+                            trihedronStr = "CorrectedFrenet";
+                            break;
+                        case 2:
+                            trihedronStr = "Fixed";
+                            break;
+                        case 3:
+                            trihedronStr = "Frenet";
+                            break;
+                        case 4:
+                            trihedronStr = "ConstantNormal";
+                            break;
+                        case 5:
+                            trihedronStr = "Darboux";
+                            break;
+                        case 6:
+                            trihedronStr = "GuideAC";
+                            break;
+                        case 7:
+                            trihedronStr = "GuidePlan";
+                            break;
+                        case 8:
+                            trihedronStr = "GuideACWithContact";
+                            break;
+                        case 9:
+                            trihedronStr = "GuidePlanWithContact";
+                            break;
+                        default:
+                            trihedronStr = "DiscreteTrihedron";
+                            break;
+                    }
+
                     IntPtr out_dimTags;
                     long outDimTags_n;
                     var arr = IHelpers.FlattenIntTupleArray(dimTags);
-                    IWrap.GmshModelOccAddPipe(arr, arr.LongLength, wireTag, out out_dimTags, out outDimTags_n, ref _ierr);
+                    IWrap.GmshModelOccAddPipe(arr, arr.LongLength, wireTag, out out_dimTags, out outDimTags_n, trihedronStr, ref _ierr);
                     outDimTags = new Tuple<int, int>[0];
                     if (outDimTags_n > 0)
                     {
@@ -1385,6 +1516,15 @@ namespace Iguana.IguanaMesh
                     }
 
                     Free(dtP);
+                }
+
+                /// <summary>
+                /// Convert the entities `dimTags' to NURBS.
+                /// </summary>
+                public static void ConvertToNurbs(Tuple<int, int>[] dimTags)
+                {
+                    var arr = IHelpers.FlattenIntTupleArray(dimTags);
+                    IWrap.GmshModelOccConvertToNURBS(arr, arr.LongLength, ref _ierr);
                 }
 
                 /// <summary>

@@ -91,11 +91,30 @@ namespace IguanaMeshGH.ICreators
                 return;
             }
 
-            if (_inner.Contains(null) || _inner.Count > 0 && !_inner.TrueForAll(crv => crv.IsPolyline()))
+            if (_inner.Contains(null))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "A null curve was found.");
+                return;
+            }
+
+            if (_inner.Count > 0 && !_inner.TrueForAll(crv => crv.IsPolyline()))
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Inner boundaries should be planar closed polylines.");
                 return;
             }
+
+            if (constraints==null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "A null constraint was found.");
+                return;
+            }
+
+            if (transfinites == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "A null transfinite was found.");
+                return;
+            }
+
 
             string logInfo;
             GH_Structure<IEntityInfo> entities;
