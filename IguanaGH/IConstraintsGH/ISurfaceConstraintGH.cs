@@ -63,7 +63,7 @@ namespace IguanaMeshGH.IConstraints
             DA.GetData(0, ref b);
             DA.GetData(1, ref size);
 
-            IConstraint c = new IConstraint(3, b, size, -1, -1);
+            IConstraint c = new IConstraint(IConstraintType.Surface, 3, b, size, -1, -1);
 
             DA.SetData(0, c);
         }

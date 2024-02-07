@@ -15,46 +15,36 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System;
 using GH_IO.Serialization;
 using Grasshopper.Kernel.Types;
-using System;
 
 namespace Iguana.IguanaMesh.ITypes
 {
+    public enum IConstraintType { Point, Line, Curve, Surface }
+
     public struct IConstraint : IGH_Goo
     {
-        private int _dim;
-        private Object _geom;
-        private double _val;
-        private int _entityDim;
-        private int _entityTag;
-        private int _numberOfNodes;
-        private double _divisionLength;
+        public IConstraintType ConstraintType { get; private set; }
+        public int Dim { get; private set; }
+        public Object RhinoGeometry { get; private set; }
+        public double Size { get; private set; }
+        public int EntityDim { get; private set; }
+        public int EntityID { get; private set; }
+        public int NumberOfNodes { get; private set; }
+        public double CurveDivisionLength { get; private set; }
 
-        public IConstraint(int dimension, Object geometry, double size, int entityDimension, int entityTag, int numberOfNodes=1, double divisionLength=1)
+        public IConstraint(IConstraintType constraintType, int dimension, Object geometry, double size, int entityDimension=-1, int entityTag=-1, int numberOfNodes=1, double divisionLength=1)
         {
-            _dim = dimension;
-            _geom = geometry;
-            _val = size;
-            _entityDim = entityDimension;
-            _entityTag = entityTag;
-            _divisionLength = divisionLength;
-            _numberOfNodes = numberOfNodes;
+            ConstraintType = constraintType;
+            Dim = dimension;
+            RhinoGeometry = geometry;
+            Size = size;
+            EntityDim = entityDimension;
+            EntityID = entityTag;
+            CurveDivisionLength = divisionLength;
+            NumberOfNodes = numberOfNodes;
         }
-
-        public int NodesCountPerCurve { get => _numberOfNodes; }
-
-        public double CurveDivisionLength { get => _divisionLength; }
-
-        public Object RhinoGeometry { get => _geom; }
-
-        public double Size { get => _val; }
-
-        public int Dim { get => _dim; }
-
-        public int EntityID { get => _entityTag; }
-
-        public int EntityDim { get => _entityDim; }
 
         #region GH_methods
         public bool IsValid

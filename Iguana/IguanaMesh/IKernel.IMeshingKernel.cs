@@ -149,6 +149,41 @@ namespace Iguana.IguanaMesh
             }
 
             /// <summary>
+            /// Import a collection of rhino 8 geometries.
+            /// </summary>
+            /// <param name="geom"> Rhino geometry. Default is the current active Rhino doc. </param>
+            /// <param name="doc"> Rhino document. </param>
+            /// <param name="synchronize"> Synchronize the model. </param>
+            /// <returns></returns>
+            public static Tuple<int, int>[] ImportRhino8Geometry(IEnumerable<GeometryBase> geom, bool synchronize = true)
+            {
+                var filename = Path.ChangeExtension(Path.GetTempFileName(), ".step");
+
+                RhinoDoc doc = RhinoDoc.CreateHeadless(null);
+
+                int count = geom.Count();
+                Guid[] id = new Guid[count];
+                ObjRef[] obj = new ObjRef[count];
+                for (int i = 0; i < count; i++)
+                {
+                    id[i] = doc.Objects.Add(geom.ElementAt(i));
+                    obj[i] = new ObjRef(id[i]);
+                }
+
+                FileStp.Write(filename, doc, new FileStpWriteOptions());
+                doc.Dispose();
+
+                Tuple<int, int>[] dimTags = new Tuple<int, int>[] { };
+                IGeometryOCCKernel.IBuilder.ImportShapes(filename, out dimTags);
+                SetOptionString("OCCTargetUnit", "M");
+
+                File.Delete(filename);
+                if (synchronize) IGeometryOCCKernel.IBuilder.Synchronize();
+
+                return dimTags;
+            }
+
+            /// <summary>
             /// Import a collection of rhino 7 geometries.
             /// </summary>
             /// <param name="geom"> Rhino geometry. Default is the current active Rhino doc. </param>
@@ -230,6 +265,7 @@ namespace Iguana.IguanaMesh
             /// <param name="doc"> Rhino document. </param>
             /// <param name="synchronize"> Synchronize the model. </param>
             /// <returns></returns>
+            [Obsolete]
             private static Tuple<int, int>[] ImportRhino6Geometry(IEnumerable<GeometryBase> geom, bool synchronize = true)
             {
                 var filename = Path.ChangeExtension(Path.GetTempFileName(), ".step");

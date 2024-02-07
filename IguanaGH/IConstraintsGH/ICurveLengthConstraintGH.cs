@@ -66,7 +66,7 @@ namespace IguanaMeshGH.IConstraints
             DA.GetData(1, ref size);
             DA.GetData(2, ref length);
 
-            IConstraint constraints = new IConstraint(1, crv, size, -1, -1, 1, length);
+            IConstraint constraints = new IConstraint(IConstraintType.Curve, 1, crv, size, -1, -1, 1, length);
 
             DA.SetData(0, constraints);
         }

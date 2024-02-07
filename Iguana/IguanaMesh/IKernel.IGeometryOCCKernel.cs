@@ -87,7 +87,7 @@ namespace Iguana.IguanaMesh
 
                             case 2:
                                 crv = (Curve)data.RhinoGeometry;
-                                crvTags.AddRange(CreateUnderlyingLinesFromCurveDividedByCount(crv, data.Size,data.NodesCountPerCurve));
+                                crvTags.AddRange(CreateUnderlyingLinesFromCurveDividedByCount(crv, data.Size,data.NumberOfNodes));
                                 break;
                             case 3:
                                 Brep b = (Brep)data.RhinoGeometry;

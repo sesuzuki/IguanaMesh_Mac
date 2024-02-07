@@ -25,6 +25,13 @@ namespace Iguana.IguanaMesh
     {
         internal static int _ierr = 0;
 
+        /// <summary>
+        /// Evaluate a point with respect to a point cloud
+        /// </summary>
+        /// <param name="pts"> Pointcloud to search </param>
+        /// <param name="p"> Point to evaluate </param>
+        /// <param name="t"> Distance tolerance for finding similar points </param>
+        /// <returns></returns>
         internal static int EvaluatePoint(PointCloud pts, Point3d p, double t)
         {
             int idx = pts.ClosestPoint(p);

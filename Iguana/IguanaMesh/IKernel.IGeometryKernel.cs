@@ -32,6 +32,86 @@ namespace Iguana.IguanaMesh
 
             #region Iguana Methods
 
+            public static void EmbedConstraintsNew(List<IConstraint> constraints, ref PointCloud cloud, int dim = 2, int tag = -1)
+            {
+                if (constraints == null || constraints == default || constraints.Count == 0) return;
+
+                Tuple<int, int>[] dimTags;
+                IModel.GetEntities(out dimTags, dim);
+
+                if (tag == -1)
+                {
+                    var mainTags = dimTags.Select(keyPair => keyPair.Item2).ToArray();
+
+                    if (mainTags.Length == 1) tag = mainTags[0];
+                    else if (mainTags.Length > 1 && dim == 2)
+                    {
+                        tag = IBuilder.AddSurfaceLoop(mainTags);
+                    }
+                }
+
+                int count = constraints.Count;
+
+                if (count > 0)
+                {
+                    List<int> ptsTags = new List<int>();
+                    List<int> crvTags = new List<int>();
+                    List<int> srfTags = new List<int>();
+
+                    IConstraint data;
+                    double t = 1e-3;
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        data = constraints[i];
+
+                        switch (data.ConstraintType)
+                        {
+                            case IConstraintType.Point:
+                                Point3d p = (Point3d)data.RhinoGeometry;
+                                int idx = EvaluatePoint(cloud, p, t) + 1; // Zero or negative tags are reserved by Gmsh for internal use.
+
+                                if (idx == 0)
+                                {
+                                    ptsTags.Add(IBuilder.AddPoint(p.X, p.Y, p.Z, data.Size));
+                                    cloud.Add(p);
+                                }
+
+                                break;
+
+                            case IConstraintType.Line:
+                                Line ln = (Line) data.RhinoGeometry;
+                                crvTags.Add(CreateLine(ln, data.Size, ref cloud));
+                                break;
+
+                            case IConstraintType.Curve:
+                                Curve crv = (Curve) data.RhinoGeometry;
+                                crvTags.AddRange(CreateUnderlyingLinesFromCurveDividedByCount(crv, data.Size, data.NumberOfNodes, ref cloud));
+                                break;
+                            //case 3:
+                            //    Brep b = (Brep)data.RhinoGeometry;
+                            //    List<Point3d> patch;
+                            //    Curve[] crvArr;
+                            //    IRhinoGeometry.GetBrepFaceMeshingData(b, 0, 20, out crvArr, out patch);
+                            //    srfTags.Add(CreateUnderlyingSurfaceFromCurve(crvArr[0], data.Size, patch, false));
+                            //    break;
+                        }
+                    }
+
+                    IBuilder.Synchronize();
+
+                    if (tag != -1)
+                    {
+                        if (ptsTags.Count > 0) IMeshingKernel.IBuilder.Embed(0, ptsTags.ToArray(), dim, tag);
+                        if (crvTags.Count > 0) IMeshingKernel.IBuilder.Embed(1, crvTags.ToArray(), dim, tag);
+                        if (dim == 3)
+                        {
+                            if (srfTags.Count > 0) IMeshingKernel.IBuilder.Embed(2, srfTags.ToArray(), dim, tag);
+                        }
+                    }
+                }
+            }
+
             public static void EmbedConstraints(List<IConstraint> constraints, int dim = 2, int tag = -1)
             {
                 if (constraints == null || constraints == default || constraints.Count == 0) return;
@@ -88,7 +168,7 @@ namespace Iguana.IguanaMesh
 
                             case 2:
                                 crv = (Curve)data.RhinoGeometry;
-                                crvTags.AddRange(CreateUnderlyingLinesFromCurveDividedByCount(crv, data.Size, data.NodesCountPerCurve));
+                                crvTags.AddRange(CreateUnderlyingLinesFromCurveDividedByCount(crv, data.Size, data.NumberOfNodes));
                                 break;
                             case 3:
                                 Brep b = (Brep)data.RhinoGeometry;
@@ -206,6 +286,147 @@ namespace Iguana.IguanaMesh
 
                 return surfaceTag;
             }
+
+            // NEW
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////
+            ///// NOTE: Zero or negative tags are reserved by Gmsh for internal use.
+            ///
+            // TODO: Add documentation of new fuction
+            public static int CreateUnderlyingPlaneSurfaceDividedByCount(Curve boundary, List<Curve> holes, double size, int count, ref PointCloud cloud)
+            {
+                int[] crv_tags = new int[holes.Count + 1];
+                crv_tags[0] = CreateUnderlyingPolylineFromCurveDividedByCount(boundary, size, count, ref cloud);
+
+                for (int i = 0; i < holes.Count; i++) crv_tags[i + 1] = CreateUnderlyingPolylineFromCurveDividedByCount(holes[i], size, count, ref cloud);
+
+                int surfaceTag = IBuilder.AddPlaneSurface(crv_tags);
+
+                return surfaceTag;
+            }
+
+            ////////////////////////////////////////////////////////////
+            // TODO: Add documentation of new fuction
+            public static int CreateUnderlyingPolylineFromCurveDividedByCount(Curve curve, double size, int count, ref PointCloud cloud)
+            {
+                int[] crvTags = CreateUnderlyingLinesFromCurveDividedByCount(curve, size, count, ref cloud);
+                int wireTag = IBuilder.AddCurveLoop(crvTags);
+                return wireTag;
+            }
+
+            ////////////////////////////////////////////////////////////
+            // TODO: Add documentation of new fuction
+            public static int[] CreateUnderlyingLinesFromCurveDividedByCount(Curve crv, double size, int nodeNumber, ref PointCloud cloud, bool synchronize = false, double distanceTolerance = 1e-3)
+            {
+                if (!crv.IsLinear())
+                {
+                    Curve[] seg = crv.DuplicateSegments();
+
+                    List<int> ptTags = new List<int>();
+                    bool isClosed = crv.IsClosed;
+                    Point3d p;
+
+                    for (int i = 0; i < seg.Length; i++)
+                    {
+                        Curve c = seg[i];
+                        double[] t = c.DivideByCount(nodeNumber, true);
+
+                        int count = t.Length - 1;
+                        if (i == seg.Length - 1 && !isClosed) count = t.Length;
+
+                        for (int j = 0; j < count; j++)
+                        {
+                            p = c.PointAt(t[j]);
+                            int idx = IKernel.EvaluatePoint(cloud, p, distanceTolerance) + 1; // Zero or negative tags are reserved by Gmsh for internal use.
+                            if (idx == 0)
+                            {
+                                idx = IBuilder.AddPoint(p.X, p.Y, p.Z, size);
+                                cloud.Add(p);
+                            }
+                            ptTags.Add(idx);
+                        }
+                    }
+
+                    List<int> lnTags = new List<int>();
+                    for (int i = 0; i < ptTags.Count - 1; i++)
+                    {
+                        lnTags.Add(IBuilder.AddLine(ptTags[i], ptTags[i + 1]));
+                    }
+
+                    if (isClosed)
+                    {
+                        lnTags.Add(IBuilder.AddLine(ptTags[ptTags.Count - 1], ptTags[0]));
+                    }
+
+                    if (synchronize) IBuilder.Synchronize();
+                    return lnTags.ToArray();
+                }
+                else
+                {
+                    List<int> ptTags = new List<int>();
+                    Point3d p;
+                    double[] t = crv.DivideByCount(nodeNumber, true);
+
+                    for (int i = 0; i < t.Length; i++)
+                    {
+                        p = crv.PointAt(t[i]);
+                        int idx = IKernel.EvaluatePoint(cloud, p, distanceTolerance) +1; // Zero or negative tags are reserved by Gmsh for internal use.
+                        if (idx == 0)
+                        {
+                            idx = IBuilder.AddPoint(p.X, p.Y, p.Z, size);
+                            cloud.Add(p);
+                        }
+                        ptTags.Add(idx);
+                    }
+
+                    List<int> lnTags = new List<int>();
+                    for (int i = 0; i < ptTags.Count - 1; i++)
+                    {
+                        lnTags.Add(IBuilder.AddLine(ptTags[i], ptTags[i + 1]));
+                    }
+
+                    if (synchronize) IBuilder.Synchronize();
+                    return lnTags.ToArray();
+                }
+            }
+
+            ////////////////////////////////////////////////////////////
+            // TODO: Add documentation of new fuction
+            public static int CreateLine(Line ln, double size, ref PointCloud cloud, bool synchronize = false, double distanceTolerance = 1e-3)
+            {
+                Point3d p0 = ln.From;
+                int idx0 = IKernel.EvaluatePoint(cloud, p0, distanceTolerance) + 1; // Zero or negative tags are reserved by Gmsh for internal use.
+                if (idx0 == 0)
+                {
+                    idx0 = IBuilder.AddPoint(p0.X, p0.Y, p0.Z, size);
+                    cloud.Add(p0);
+                }
+
+                Point3d p1 = ln.To;
+                int idx1 = IKernel.EvaluatePoint(cloud, p1, distanceTolerance) + 1; //Zero or negative tags are reserved by Gmsh for internal use.
+                if (idx1 == 0)
+                {
+                    idx1 = IBuilder.AddPoint(p1.X, p1.Y, p1.Z, size);
+                    cloud.Add(p1);
+                }
+
+                int lineTag = IBuilder.AddLine(idx0, idx1);
+
+                if (synchronize) IBuilder.Synchronize();
+
+                return lineTag;
+            }
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             public static int[] CreateUnderlyingLinesFromPolyline(Polyline poly, double size, ref List<int> ptsTags, ref PointCloud ptsCloud, double t = 0.001, bool synchronize = false)
             {

@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Grasshopper;
 using Grasshopper.Kernel;
 using Iguana.IguanaMesh.ITypes;
 using Rhino.Geometry;
 
 namespace IguanaMeshGH.IConstraintsGH
 {
-    public class ICurveCountConstraintGH : GH_Component
+    public class ILineConstraintGH : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the ICurveCountConstraintGH class.
+        /// Each implementation of GH_Component must provide a public 
+        /// constructor without any arguments.
+        /// Category represents the Tab in which the component will appear, 
+        /// Subcategory the panel. If you use non-existing tab or panel names, 
+        /// new tabs/panels will automatically be created.
         /// </summary>
-        public ICurveCountConstraintGH()
-          : base("iCurveCountConstraint", "iCurveCountConstraint",
-              "Embed a curve divided by count to constraint mesh generation.",
-              "Iguana", "Constraints")
+        public ILineConstraintGH()
+          : base("ILineConstraintGH", "iLineConstraint",
+                  "Embed a line to constraint mesh generation.",
+                  "Iguana", "Constraints")
         {
         }
 
@@ -24,9 +29,8 @@ namespace IguanaMeshGH.IConstraintsGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddCurveParameter("Curve", "Crv", "Curve to use as a geometric constraint.", GH_ParamAccess.item);
+            pManager.AddLineParameter("Line", "Ln", "Line to use as a geometric constraint.", GH_ParamAccess.item);
             pManager.AddNumberParameter("Size", "Size", "Target global mesh element size at the constraint curve.", GH_ParamAccess.item);
-            pManager.AddIntegerParameter("Count", "Count", "Number of sampling nodes.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -43,35 +47,38 @@ namespace IguanaMeshGH.IConstraintsGH
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            Curve crv = null;
+            Line ln = Line.Unset;
             double size = 0;
-            int count = 0;
-            DA.GetData(0, ref crv);
+            if(!DA.GetData(0, ref ln)) return;
             DA.GetData(1, ref size);
-            DA.GetData(2, ref count);
 
-            IConstraint constraints = new IConstraint(IConstraintType.Curve, 2, crv, size, -1, -1, count);
+            IConstraint constraints = new IConstraint(IConstraintType.Line, 1, ln, size, -1, -1);
 
             DA.SetData(0, constraints);
         }
 
         /// <summary>
-        /// Provides an Icon for the component.
+        /// Provides an Icon for every component that will be visible in the User Interface.
+        /// Icons need to be 24x24 pixels.
         /// </summary>
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
-                return Properties.Resources.iCurveCountConstraints;
+                // You can add image files to your project resources and access them like this:
+                //return Resources.IconForThisComponent;
+                return null;
             }
         }
 
         /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
+        /// Each component must have a unique Guid to identify it. 
+        /// It is vital this Guid doesn't change otherwise old ghx files 
+        /// that use the old ID will partially fail during loading.
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("22f69df2-a8eb-4113-b52d-252ce6534eeb"); }
+            get { return new Guid("68675327-5829-47d2-9237-155b21305517"); }
         }
     }
 }

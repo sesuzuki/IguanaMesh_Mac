@@ -68,7 +68,7 @@ namespace IguanaMeshGH.IConstraints
             for (int i = 0; i < pts.Count; i++)
             {
                 if (pts.Count == values.Count) val = values[i];
-                constraints[i] = new IConstraint(0, pts[i], val, -1, -1);
+                constraints[i] = new IConstraint(IConstraintType.Point, 0, pts[i], val, -1, -1);
             }
 
             DA.SetDataList(0, constraints);
